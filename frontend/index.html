@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0B1020">
+<meta name="app-token" content="__APP_TOKEN__">
+<title>Stock Note</title>
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://unpkg.com">
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/styles.css">
+<script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js" defer></script>
+<script type="module" src="/static/app.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">ข้ามไปเนื้อหา</a>
+<div id="login" hidden></div>
+<header class="top" id="appTop">
+  <a class="brand" href="#/" aria-label="Stock Note หน้าพอร์ต" translate="no">
+    <span class="logo" aria-hidden="true"><i></i><i></i><i></i></span>
+    Stock Note
+  </a>
+  <nav class="tabs" aria-label="เมนูหลัก">
+    <a href="#/" data-nav="portfolio">พอร์ต</a>
+    <a href="#/ledger" data-nav="ledger">สมุดรายการ</a>
+    <a href="#/settings" data-nav="settings">ตั้งค่า</a>
+  </nav>
+  <div class="top-right">
+    <div class="acct">
+      <button class="acct-btn" id="acctBtn" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="acctMenu"></button>
+      <div class="acct-menu" id="acctMenu" role="menu" hidden></div>
+    </div>
+    <button class="btn line small" id="exportBtn" type="button">ดาวน์โหลด Excel</button>
+  </div>
+</header>
+
+<div class="layout" id="appLayout">
+  <aside class="side" aria-label="หุ้นที่ติดตาม">
+    <form class="add-sym" id="addSym" autocomplete="off">
+      <label class="sr" for="addSymInput">เพิ่มหุ้นที่ติดตาม</label>
+      <input id="addSymInput" name="symbol" placeholder="ค้นหาหุ้น เช่น PTT…" maxlength="20" spellcheck="false" autocomplete="off">
+    </form>
+    <p class="side-title">หุ้นที่ติดตาม</p>
+    <ul class="watch" id="watchlist"></ul>
+  </aside>
+  <main id="main" tabindex="-1"></main>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<dialog id="dialog"></dialog>
+</body>
+</html>

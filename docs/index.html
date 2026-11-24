@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0B1020">
+<title>Stock Note</title>
+<meta name="description" content="Stock Note แอปดูพอร์ตหุ้นไทยแบบแยกล็อต เห็นก่อนขายว่าโบรกจะตัดล็อตไหน (FIFO) และกำไรจริงทั้งก้อนเท่าไหร่">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0B1020; --surface: #131A2D; --surface-2: #1A2340; --line: #24304F; --line-strong: #34426A;
+  --text: #F4F6FB; --text-2: #B3BCD3; --text-3: #8591AE;
+  --brand: #7C8CFF; --brand-2: #5A6BFF; --brand-bg: rgba(124,140,255,.14);
+  --gain: #22D39B; --loss: #FF5C70; --mark: #FFC757;
+  --font-ui: "IBM Plex Sans Thai", "Leelawadee UI", Tahoma, sans-serif;
+  --font-num: "Prompt", "IBM Plex Sans Thai", sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { -webkit-tap-highlight-color: transparent; scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.7 var(--font-ui); -webkit-font-smoothing: antialiased; }
+h1, h2, h3 { font-family: var(--font-num); font-weight: 600; line-height: 1.25; margin: 0; text-wrap: balance; }
+p { margin: 0; }
+a { color: var(--brand); }
+:focus-visible { outline: 2px solid #9AA6FF; outline-offset: 3px; border-radius: 6px; }
+.wrap { width: min(1120px, 100% - 32px); margin: 0 auto; }
+
+header { display: flex; align-items: center; justify-content: space-between; padding: 22px 0; }
+.brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-num); font-weight: 600; font-size: 20px; color: var(--text); text-decoration: none; }
+.logo { display: grid; gap: 2px; width: 16px; }
+.logo i { display: block; height: 6px; border-radius: 2px; }
+.logo i:nth-child(1) { background: var(--loss); } .logo i:nth-child(2) { background: var(--gain); } .logo i:nth-child(3) { background: var(--brand); }
+nav a { color: var(--text-2); text-decoration: none; margin-left: 22px; font-weight: 500; }
+nav a:hover { color: var(--text); }
+
+.hero { display: grid; grid-template-columns: 1.15fr .85fr; gap: 48px; align-items: center; padding: 56px 0 72px; }
+.hero h1 { font-size: clamp(36px, 5vw, 56px); letter-spacing: -.01em; margin-bottom: 18px; }
+.hero h1 span { display: block; color: var(--text-2); font-size: .5em; font-weight: 500; margin-top: 10px; }
+.hero p.lead { font-size: 18px; color: var(--text-2); max-width: 44ch; margin-bottom: 30px; }
+.cta { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.btn { display: inline-flex; align-items: center; gap: 10px; min-height: 52px; padding: 0 24px; border-radius: 12px; font-family: var(--font-num); font-weight: 500; font-size: 17px; text-decoration: none; transition: filter .15s, transform .1s; }
+.btn:hover { filter: brightness(1.1); }
+.btn:active { transform: translateY(1px); }
+.btn.primary { background: linear-gradient(180deg, var(--brand), var(--brand-2)); color: #fff; }
+.btn.ghost { border: 1px solid var(--line-strong); color: var(--text); }
+.btn.ghost:hover { background: var(--surface); filter: none; }
+.meta { font-size: 14px; color: var(--text-3); margin-top: 14px; }
+
+/* the FIFO stack illustration */
+.demo { background: var(--surface); border: 1px solid var(--line); border-radius: 22px; padding: 22px; }
+.demo-head { display: flex; justify-content: space-between; font-size: 13.5px; color: var(--text-3); margin-bottom: 12px; }
+.demo-head b { color: var(--text); font-family: var(--font-num); font-size: 18px; }
+.rows { display: grid; gap: 4px; }
+.row { display: grid; grid-template-columns: 64px 1fr; gap: 12px; }
+.bar { border-radius: 8px; display: grid; place-items: center; font-family: var(--font-num); font-weight: 600; font-size: 13px; color: rgba(0,0,0,.7); }
+.bar.g { background: var(--gain); } .bar.l { background: var(--loss); color: #fff; } .bar.n { border: 2px dashed var(--brand); color: var(--brand); }
+.info { background: var(--surface-2); border-radius: 10px; padding: 9px 12px; display: flex; justify-content: space-between; gap: 8px; font-size: 14px; }
+.info b { font-family: var(--font-num); font-weight: 600; }
+.row.out { opacity: .55; transform: translate(6px, -3px); }
+.row.out .bar { background: repeating-linear-gradient(135deg, #fff 0 5px, rgba(255,255,255,.5) 5px 10px); }
+.row.out .info { text-decoration: line-through; }
+.edge { font-size: 12.5px; color: var(--text-3); text-align: left; padding-left: 76px; margin: 6px 0; }
+.say { margin-top: 14px; padding: 12px 14px; background: var(--brand-bg); border-radius: 12px; font-size: 14.5px; }
+.gain { color: var(--gain); } .loss { color: var(--loss); }
+
+section.block { padding: 64px 0; border-top: 1px solid var(--line); }
+section.block > h2 { font-size: 30px; margin-bottom: 10px; }
+section.block > p.sub { color: var(--text-2); margin-bottom: 32px; max-width: 60ch; }
+.features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.feature { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 22px; }
+.feature h3 { font-size: 18px; margin-bottom: 8px; }
+.feature p { color: var(--text-2); font-size: 15px; }
+
+.steps { counter-reset: s; list-style: none; padding: 0; margin: 0; display: grid; gap: 14px; max-width: 760px; }
+.steps li { counter-increment: s; display: grid; grid-template-columns: 40px 1fr; gap: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 18px; }
+.steps li::before { content: counter(s); display: grid; place-items: center; width: 34px; height: 34px; border-radius: 99px; background: var(--brand-bg); color: var(--brand); font-family: var(--font-num); font-weight: 600; }
+.steps b { font-family: var(--font-num); font-weight: 600; }
+.steps .note { display: block; margin-top: 6px; color: var(--text-3); font-size: 14.5px; }
+kbd { font-family: var(--font-num); font-size: .9em; background: var(--surface-2); border: 1px solid var(--line-strong); border-radius: 6px; padding: 1px 7px; }
+
+.brokers { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 22px; }
+.card h3 { font-size: 17px; margin-bottom: 10px; }
+.card ul { margin: 0; padding-left: 20px; color: var(--text-2); }
+.tag { display: inline-block; font-size: 12.5px; font-weight: 600; padding: 2px 10px; border-radius: 99px; margin-bottom: 10px; }
+.tag.yes { background: rgba(34,211,155,.14); color: var(--gain); } .tag.no { background: rgba(255,199,87,.14); color: var(--mark); }
+
+details { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 4px 20px; max-width: 820px; }
+details + details { margin-top: 10px; }
+summary { cursor: pointer; padding: 14px 0; font-family: var(--font-num); font-weight: 500; font-size: 17px; }
+details p, details ul { color: var(--text-2); margin: 0 0 16px; }
+pre { background: var(--surface-2); border-radius: 10px; padding: 12px 14px; overflow-x: auto; font-size: 14px; margin: 0 0 16px; }
+
+footer { padding: 40px 0 56px; border-top: 1px solid var(--line); color: var(--text-3); font-size: 14px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+
+@media (max-width: 880px) {
+  .hero { grid-template-columns: 1fr; padding-top: 24px; }
+  .features, .brokers { grid-template-columns: 1fr; }
+  nav a:not(:last-child) { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="brand" href="#" translate="no"><span class="logo" aria-hidden="true"><i></i><i></i><i></i></span>Stock Note</a>
+    <nav aria-label="เมนู"><a href="#features">ความสามารถ</a><a href="#install">วิธีติดตั้ง</a><a href="#faq">คำถาม</a>
+      <a href="https://github.com/woraphontrangpanich-jpg/stocknote">GitHub</a></nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div>
+        <h1>รู้ก่อนขาย ว่าโบรกจะตัดล็อตไหน<span>แอปดูพอร์ตหุ้นไทยแบบแยกทุกล็อตที่ซื้อ</span></h1>
+        <p class="lead">ซื้อหุ้นตัวเดิมหลายรอบแล้วกำไรขาดทุนเด้งไปมาเพราะโบรกตัดแบบ FIFO? Stock Note แสดงทุกล็อตเป็นแท่งซ้อนกัน บอกกำไรตามโบรก ตามต้นทุนเฉลี่ย และกำไรจริงทั้งก้อน</p>
+        <div class="cta">
+          <a class="btn primary" href="https://github.com/woraphontrangpanich-jpg/stocknote/releases/latest/download/StockNote-windows.zip">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 19h16"/></svg>
+            ดาวน์โหลดสำหรับ Windows</a>
+          <a class="btn ghost" href="#install">วิธีติดตั้ง</a>
+        </div>
+        <p class="meta">ฟรี  Windows 10/11  ไฟล์ zip ประมาณ 27 MB  ไม่ต้องติดตั้ง Python</p>
+      </div>
+
+      <div class="demo" aria-label="ตัวอย่างแท่งล็อต PTT">
+        <div class="demo-head"><span><b translate="no">PTT</b> 300 หุ้น 3 ล็อต</span><span>ราคาตลาด 45.00</span></div>
+        <p class="edge">▲ ขายออกจากด้านบนก่อน</p>
+        <div class="rows">
+          <div class="row out"><div class="bar g" style="height:58px">100</div><div class="info"><span>100 หุ้น @ 40.00</span><b class="gain">+500</b></div></div>
+          <div class="row"><div class="bar g" style="height:58px">100</div><div class="info"><span>100 หุ้น @ 45.00</span><b>0</b></div></div>
+          <div class="row"><div class="bar l" style="height:58px">100</div><div class="info"><span>100 หุ้น @ 50.00</span><b class="loss">−500</b></div></div>
+          <div class="row"><div class="bar n" style="height:46px">+100</div><div class="info"><span>ซื้อเพิ่มต่อด้านล่าง</span></div></div>
+        </div>
+        <p class="edge">▼ ซื้อเพิ่มจะต่อด้านล่าง</p>
+        <p class="say">ขาย 100 หุ้นที่ 45 โบรกแสดง <b class="gain">กำไร 500</b> แต่กำไรจริงทั้งก้อน <b>0</b> และต้นทุนเฉลี่ยที่เหลือขยับจาก 45 เป็น 47.50</p>
+      </div>
+    </section>
+
+    <section class="block" id="features">
+      <h2>ทำอะไรได้บ้าง</h2>
+      <p class="sub">ทุกอย่างทำงานในเครื่องคุณ ข้อมูลไม่ถูกส่งขึ้นเซิร์ฟเวอร์ของใคร</p>
+      <div class="features">
+        <div class="feature"><h3>แท่งล็อตแบบ FIFO</h3><p>เห็นทุกล็อตซ้อนกัน บนสุดขายก่อน ลองลากจำนวนที่จะขาย แล้วดูว่าล็อตไหนโดนตัดและกำไรเท่าไหร่</p></div>
+        <div class="feature"><h3>กำไร 3 มุม</h3><p>กำไรตามโบรก (FIFO) กำไรตามต้นทุนเฉลี่ย และกำไรรวมทั้งก้อนที่ไม่เด้งตามการตัดล็อต</p></div>
+        <div class="feature"><h3>กราฟเทคนิค</h3><p>แท่งเทียน SMA EMA Bollinger RSI MACD Fibonacci อัตโนมัติ และเส้นต้นทุนของแต่ละล็อตบนกราฟ</p></div>
+        <div class="feature"><h3>เชื่อม Settrade Open API</h3><p>ใส่ API key ของโบรกที่รองรับ เพื่อดูราคาสด ดึงรายการซื้อขาย และส่งคำสั่งจากแอป</p></div>
+        <div class="feature"><h3>หลายบัญชี</h3><p>แยกสมุดล็อตตามบัญชี สลับบัญชีหรือออกจากระบบได้ บัญชีที่ไม่มี API ก็กรอกเองได้</p></div>
+        <div class="feature"><h3>ส่งออก Excel</h3><p>ไฟล์ Excel มีสูตรจริง 5 ชีต ทั้งสรุปพอร์ต ล็อต ประวัติ และกำไรที่ขายแล้ว</p></div>
+      </div>
+    </section>
+
+    <section class="block" id="install">
+      <h2>วิธีติดตั้ง</h2>
+      <p class="sub">ใช้เวลาประมาณ 1 นาที ไม่ต้องติดตั้ง Python หรือโปรแกรมอื่นเพิ่ม</p>
+      <ol class="steps">
+        <li><div><b>ดาวน์โหลดไฟล์ <span translate="no">StockNote-windows.zip</span></b>
+          <span class="note"><a href="https://github.com/woraphontrangpanich-jpg/stocknote/releases/latest/download/StockNote-windows.zip">กดตรงนี้เพื่อดาวน์โหลด</a> หรือดูทุกเวอร์ชันที่ <a href="https://github.com/woraphontrangpanich-jpg/stocknote/releases">หน้า Releases</a></span></div></li>
+        <li><div><b>คลิกขวาที่ไฟล์ zip แล้วเลือก Extract All</b>
+          <span class="note">แตกไฟล์ไว้ที่ไหนก็ได้ เช่น <kbd>Documents</kbd> ห้ามเปิดจากในไฟล์ zip โดยตรง</span></div></li>
+        <li><div><b>เปิดโฟลเดอร์ StockNote แล้วดับเบิลคลิก <span translate="no">StockNote.exe</span></b>
+          <span class="note">ถ้า Windows ขึ้นหน้าจอสีน้ำเงิน "Windows protected your PC" ให้กด <kbd>More info</kbd> แล้ว <kbd>Run anyway</kbd> เพราะโปรแกรมยังไม่ได้ซื้อใบรับรองแบบเสียเงิน</span></div></li>
+        <li><div><b>ปักหมุดไว้ใช้ครั้งต่อไป</b>
+          <span class="note">ตอนโปรแกรมเปิดอยู่ คลิกขวาที่ไอคอนบน Taskbar แล้วเลือก Pin to taskbar หรือคลิกขวาที่ StockNote.exe เลือก Send to แล้ว Desktop</span></div></li>
+      </ol>
+    </section>
+
+    <section class="block" id="brokers">
+      <h2>ใช้กับโบรกไหนได้บ้าง</h2>
+      <p class="sub">ทุกโบรกใช้สมุดล็อตได้ แต่การดึงข้อมูลอัตโนมัติและส่งคำสั่งจากแอป ต้องใช้โบรกที่เปิด Settrade Open API สำหรับหุ้น</p>
+      <div class="brokers">
+        <div class="card"><span class="tag yes">เชื่อม API ได้</span><h3>ดึงข้อมูลและส่งคำสั่งได้</h3>
+          <ul><li>BEYOND (015)</li><li>Globlex (025)</li><li>InnovestX (023) ของกลุ่ม SCB</li><li>KGI (013)</li><li>Trinity (022)</li><li>UOB Kay Hian (026)</li></ul></div>
+        <div class="card"><span class="tag no">กรอกเอง</span><h3>ใช้สมุดล็อตกับราคาล่าช้า 15 นาที</h3>
+          <ul><li>กรุงศรี, ttb wealth และโบรกอื่น ๆ</li><li>กรอกรายการซื้อขายเอง หรือนำเข้าจาก Excel</li><li>ส่งคำสั่งจากแอปไม่ได้</li></ul></div>
+      </div>
+    </section>
+
+    <section class="block" id="faq">
+      <h2>คำถามที่พบบ่อย</h2>
+      <p class="sub"></p>
+      <details><summary>หา API key ได้จากไหน</summary>
+        <p>เข้า streaming.settrade.com ด้วย username เดียวกับแอป Streaming กดเมนู More แล้วเลือก API Key Management กด Generate จะได้ App ID และ App Secret (แสดงครั้งเดียว ให้คัดลอกเก็บไว้) ส่วน App Code อยู่ในหน้าเดียวกัน ลูกค้า InnovestX ไม่มีในหน้านี้ ให้ติดต่อ InnovestX เพื่อขอ key</p></details>
+      <details><summary>เปิดใช้บนเว็บเลยโดยไม่ดาวน์โหลดได้ไหม</summary>
+        <p>ยังไม่ได้ Stock Note ต้องรันโปรแกรมเล็ก ๆ ในเครื่องเพื่อเซ็นคำขอไปที่ Settrade ด้วย App Secret และดึงราคาหุ้น ซึ่งหน้าเว็บอย่างเดียวทำไม่ได้ และถ้าเอา App Secret ไปไว้ในหน้าเว็บก็ไม่ปลอดภัย โปรแกรมจึงรันในเครื่องคุณ เปิดได้เฉพาะจากเครื่องนี้ และไม่ส่ง key ไปที่อื่นนอกจาก Settrade</p></details>
+      <details><summary>ข้อมูลเก็บไว้ที่ไหน ถ้าอัปเดตเวอร์ชันใหม่ข้อมูลจะหายไหม</summary>
+        <p>ข้อมูลเก็บที่ <kbd>%LOCALAPPDATA%\StockNote</kbd> แยกจากตัวโปรแกรม อัปเดตโดยแตกไฟล์เวอร์ชันใหม่ทับได้เลย ข้อมูลไม่หาย และมีไฟล์สำรองอัตโนมัติวันละไฟล์ API key เก็บใน Windows Credential Manager</p></details>
+      <details><summary>ใช้บน Mac หรือมือถือได้ไหม</summary>
+        <p>ตอนนี้มีตัวติดตั้งสำหรับ Windows เท่านั้น บน Mac หรือ Linux รันจากซอร์สโค้ดได้ ถ้ามี Python 3.10 ขึ้นไป</p>
+        <pre>git clone https://github.com/woraphontrangpanich-jpg/stocknote.git
+cd stocknote
+python -m venv .venv
+.venv/bin/pip install -r requirements.txt
+.venv/bin/python run.py</pre></details>
+      <details><summary>ปลอดภัยไหม</summary>
+        <ul><li>โปรแกรมรับการเชื่อมต่อจากเครื่องตัวเองเท่านั้น (127.0.0.1)</li><li>PIN ซื้อขายใช้ครั้งเดียวต่อคำสั่ง ไม่ถูกบันทึก</li><li>ทุกคำสั่งซื้อขายต้องกดยืนยันก่อนส่ง</li><li>ซอร์สโค้ดเปิดให้ดูได้ทั้งหมดบน GitHub</li></ul></details>
+    </section>
+  </main>
+
+  <footer>
+    <span translate="no">Stock Note</span>
+    <span>ข้อมูลในแอปไม่ใช่คำแนะนำการลงทุน ตรวจสอบกับใบยืนยันการซื้อขายของโบรกเสมอ</span>
+  </footer>
+</div>
+</body>
+</html>
